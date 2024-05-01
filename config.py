@@ -72,7 +72,11 @@ keys = [
     ),
     Key([mod], "Return", lazy.spawn(terminal), desc="Launch terminal"),
     Key(["control"], "f", lazy.spawn(browser), desc="launch firefox"),
-    Key(["control", "shift"], "s", lazy.spawn("scrot -s ~/pictures/screenshot/capture.png"), desc="takes a screenshot"),
+    # screenshot controls
+    Key([], "Print", lazy.spawn("scrot -s pictures/screenshot/capture.png"), desc="takes a screenshot"),
+    # Volume controls
+    Key([], "XF86AudioRaiseVolume", lazy.spawn("amixer set Master 5%+"), desc="Increase volumen"),
+    Key([], "XF86AudioLowerVolume", lazy.spawn("amixer set Master 5%-"), desc="Decrease volumen"),
     # Toggle between different layouts as defined below
     Key([mod], "space", lazy.next_layout(), desc="Toggle between layouts"),
     Key(["mod1"], "w", lazy.window.kill(), desc="Kill focused window"),
