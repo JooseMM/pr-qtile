@@ -28,12 +28,32 @@ from libqtile import bar, layout, qtile
 from qtile_extras import widget
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
 from libqtile.lazy import lazy
+from libqtile.log_utils import logger
 
+from libqtile import hook
+from libqtile.utils import send_notification
 from qtile_extras.widget.decorations import RectDecoration, PowerLineDecoration
+
 
 mod = "mod4"
 terminal = "alacritty"
 browser = "firefox"
+quickTerminal = "alacritty --title quick-terminal"
+lowBrightness = False
+
+
+def toggleBrightness(qtile):
+    global state
+    if (state is False):
+        qtile.cmd_spawn("xrandr --output HDMI-1 --brightness 0.5")
+        qtile.cmd_spawn("xrandr --output DP-1 --brightness 0.5")
+        state = True
+    else:
+        qtile.cmd_spawn("xrandr --output HDMI-1 --brightness 1")
+        qtile.cmd_spawn("xrandr --output DP-1 --brightness 1")
+        state = False
+
+
 
 keys = [
     # A list of available commands that can be bound to keys can be found
@@ -57,6 +77,8 @@ keys = [
     Key([mod, "control"], "l", lazy.layout.grow_right(), desc="Grow window to the right"),
     Key([mod, "control"], "j", lazy.layout.grow_down(), desc="Grow window down"),
     Key([mod, "control"], "k", lazy.layout.grow_up(), desc="Grow window up"),
+    Key([mod], "n", lazy.window.toggle_minimize(), desc="Grow window up"),
+    Key([mod], "m", lazy.group.unminimize_all(), desc="Grow window up"),
 
     # go to the next screen
     Key(["control"], "Tab", lazy.next_screen(), desc="Next monitor"),
@@ -71,6 +93,7 @@ keys = [
         desc="Toggle between split and unsplit sides of stack",
     ),
     Key([mod], "Return", lazy.spawn(terminal), desc="Launch terminal"),
+    Key([mod, "shift"], "Return", lazy.spawn(quickTerminal), desc="Launch terminal"),
     Key(["control"], "f", lazy.spawn(browser), desc="launch firefox"),
     # screenshot controls
     Key([], "Print", lazy.spawn("scrot -s pictures/screenshot/capture.png"), desc="takes a screenshot"),
@@ -90,6 +113,10 @@ keys = [
     Key([mod, "control"], "r", lazy.reload_config(), desc="Reload the config"),
     Key([mod, "control"], "q", lazy.shutdown(), desc="Shutdown Qtile"),
     Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
+    # screen shorcuts
+    Key([mod], "p",
+        lazy.function(toggleBrightness),
+        desc="toggle brightness low/high"),
 ]
 
 # Add key bindings to switch VTs in Wayland.
@@ -208,12 +235,12 @@ screens = [
                     margin_x=5,
                     **groupDecor
                     ),
-                widget.Spacer(length=100),
+                widget.Spacer(length=50),
                 # widget.TaskList(),
                 widget.Prompt(fontsize=15, font="semibold", foreground="fff", **promptDecor),
                 widget.Spacer(length=10),
-                widget.WindowName(fmt="  <i>{}</i>", **nameDecor),
-                widget.Spacer(length=200),
+                widget.WindowName(fmt="  <i>{}</i>", max_chars=90, **nameDecor),
+                widget.Spacer(length=50),
                 # widget.Memory(padding=10, font="FiraCode Nerd Font Propo", format="\uf013 <i>{MemUsed: .0f}{mm}</i>"),
                 # widget.CPU(padding=15, font="sans",  format="\uf26c   <i>{freq_current}Ghz {load_percent}%</i>"),
                 widget.Clock(format="\uf073  %d . %m . %Y  \uf4ab  %I:%M %p",  font="sans medium", fontsize=14, foreground="1d2021", **clockDecor),
@@ -254,6 +281,7 @@ floating_layout = layout.Floating(
         Match(wm_class="ssh-askpass"),  # ssh-askpass
         Match(title="branchdialog"),  # gitk
         Match(title="pinentry"),  # GPG key password entry
+        Match(title="quick-terminal"),  # GPG key password entry
     ]
 )
 auto_fullscreen = True
@@ -282,3 +310,7 @@ wmname = "LG3D"
 
 # send_notification("qtile", "Focus swicht...")
 
+#@hook.subscribe.group_window_add
+#def group_window_add(group, window):
+    # if window.name == "quick-terminal":
+        # window.enable_floating()
