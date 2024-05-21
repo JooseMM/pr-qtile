@@ -29,7 +29,8 @@ from qtile_extras import widget
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
 from libqtile.lazy import lazy
 from libqtile.log_utils import logger
-
+import os
+import subprocess
 from libqtile import hook
 from libqtile.utils import send_notification
 from qtile_extras.widget.decorations import RectDecoration, PowerLineDecoration
@@ -39,19 +40,16 @@ mod = "mod4"
 terminal = "alacritty"
 browser = "firefox"
 quickTerminal = "alacritty --title quick-terminal"
-lowBrightness = False
 
 
-def toggleBrightness(qtile):
-    global state
-    if (state is False):
-        qtile.cmd_spawn("xrandr --output HDMI-1 --brightness 0.5")
-        qtile.cmd_spawn("xrandr --output DP-1 --brightness 0.5")
-        state = True
-    else:
-        qtile.cmd_spawn("xrandr --output HDMI-1 --brightness 1")
-        qtile.cmd_spawn("xrandr --output DP-1 --brightness 1")
-        state = False
+def brightnessDown(qtile):
+    qtile.cmd_spawn("xrandr --output HDMI-A-0 --brightness 0.5")
+    qtile.cmd_spawn("xrandr --output DisplayPort-0 --brightness 0.5")
+
+
+def brightnessUp(qtile):
+    qtile.cmd_spawn("xrandr --output HDMI-A-0 --brightness 1")
+    qtile.cmd_spawn("xrandr --output DisplayPort-0 --brightness 1")
 
 
 
@@ -115,8 +113,11 @@ keys = [
     Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
     # screen shorcuts
     Key([mod], "p",
-        lazy.function(toggleBrightness),
-        desc="toggle brightness low/high"),
+        lazy.function(brightnessDown),
+        desc="toggle brightness low"),
+    Key([mod], "P",
+        lazy.function(brightnessUp),
+        desc="toggle brightness high"),
 ]
 
 # Add key bindings to switch VTs in Wayland.
@@ -310,7 +311,8 @@ wmname = "LG3D"
 
 # send_notification("qtile", "Focus swicht...")
 
-#@hook.subscribe.group_window_add
-#def group_window_add(group, window):
-    # if window.name == "quick-terminal":
-        # window.enable_floating()
+@hook.subscribe.startup
+def autostart():
+    home = os.path.expanduser("~/.config/qtile/autostart.sh")
+    subprocess.Popen([home])
+
